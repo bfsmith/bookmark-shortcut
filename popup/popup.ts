@@ -91,7 +91,7 @@ async function renderBookmarks(searchTerm: string = ''): Promise<void> {
             </div>
           </div>
           <button class="px-2 py-1 rounded cursor-pointer text-xs transition-all self-start mt-0 ${alias ? 'bg-red-500 text-white border-0 hover:bg-red-600' : 'bg-blue-500 text-white border-0 hover:bg-blue-600'} edit-alias" title="${alias ? 'Edit/Remove alias' : 'Set alias'}">
-            ${alias ? '✏️' : '➕'}
+            <span class="text-white">${alias ? '✏️' : '+'}</span>
           </button>
         </div>
       `;
