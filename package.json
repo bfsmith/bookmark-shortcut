@@ -7,15 +7,23 @@
     "build:css": "tailwindcss -i ./popup/popup.css -o ./dist/popup/popup.css --minify && tailwindcss -i ./options/options.css -o ./dist/options/options.css --minify",
     "watch": "tsc --watch",
     "build:ext": "npm run build && npm run build:css && node scripts/build-ext.js",
-    "watch:ext": "nodemon --watch popup --watch options --watch *.ts --watch *.html --watch *.css --watch manifest.json --ext ts,html,css,json --ignore dist --ignore ext --ignore node_modules --exec \"npm run build:ext\""
+    "watch:ext": "nodemon --watch popup --watch options --watch *.ts --watch *.html --watch *.css --watch manifest.json --ext ts,html,css,json --ignore dist --ignore ext --ignore node_modules --exec \"npm run build:ext\"",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
     "@types/chrome": "^0.0.268",
     "@types/node": "^20.10.0",
+    "husky": "^9.1.7",
     "nodemon": "^3.0.3",
+    "semantic-release": "^24.2.9",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"
   },
   "private": true
 }
-
