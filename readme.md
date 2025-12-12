@@ -1,141 +1,107 @@
-# Chrome Extension: Bookmark Shortcut with Omnibox Aliases
+# Bookmark Shortcut
 
-## Overview
+A browser extension that lets you create custom aliases for your bookmarks and open them from the address bar.
 
-A Chrome extension that enables opening bookmarks via custom aliases typed in the omnibox. Users can set aliases through a popup, context menu, or options page.
+Instead of navigating through bookmark folders or typing full URLs, you can assign short aliases to your bookmarks and access them by typing `b` followed by your alias in the browser's address bar.
 
-## Architecture
+## Quick Start
 
-```mermaid
-flowchart TD
-    User[User Types in Omnibox] -->|"b alias"| Omnibox[Omnibox Handler]
-    Omnibox --> Background[Background Script]
-    Background --> Storage[chrome.storage]
-    Storage -->|"Get alias mapping"| Background
-    Background --> Bookmarks[chrome.bookmarks]
-    Bookmarks -->|"Open bookmark"| Tab[New Tab]
-    
-    User2[User Right-clicks Bookmark] --> ContextMenu[Context Menu]
-    ContextMenu --> Background
-    Background --> Storage
-    
-    User3[User Opens Popup/Options] --> UI[Popup/Options Page]
-    UI --> Storage
-    UI --> Bookmarks
-```
+1. Install the extension
+2. Set an alias for any bookmark (via popup, options page, or right-click menu)
+3. Type `b` + space + your alias in the address bar
+4. Press Enter to open the bookmark
 
-## File Structure
+## Features
 
-```
-bookmark-shortcut/
-├── manifest.json              # Extension manifest
-├── background.js              # Background script (omnibox handler)
-├── popup/
-│   ├── popup.html            # Popup UI
-│   ├── popup.js              # Popup logic
-│   └── popup.css             # Popup styles
-├── options/
-│   ├── options.html          # Options page UI
-│   ├── options.js            # Options page logic
-│   └── options.css           # Options page styles
-├── icons/
-│   ├── icon16.png            # 16x16 icon (provided by user)
-│   ├── icon48.png            # 48x48 icon (provided by user)
-│   └── icon128.png           # 128x128 icon (provided by user)
-└── readme.md                  # Project documentation
-```
+### Omnibox Access
+Type a short alias in your browser's address bar to open bookmarks. The extension provides suggestions as you type, so you can find bookmarks even if you don't remember the exact alias.
 
-## Implementation Details
+### Search
+The popup and options page include search that matches bookmarks by:
+- Title
+- URL
+- Alias
+- Domain name
 
-### 1. manifest.json
+### Alias Management
+You can set, edit, or remove aliases in three ways:
+- **Popup**: Click the extension icon for quick access
+- **Options Page**: Full management interface with all your bookmarks
+- **Context Menu**: Right-click any link on a webpage to set an alias
 
-- Manifest V3 configuration
-- Permissions: `bookmarks`, `storage`, `contextMenus`, `tabs`
-- Background service worker
-- Omnibox keyword: `b` (user types "b " followed by alias)
-- Icons, popup, and options page declarations
+### Settings
+- **Custom Prefix**: Change the omnibox keyword from `b` to something else
+- **Case Sensitivity**: Toggle case-sensitive alias matching
 
-### 2. background.js
+### Import & Export
+Export your aliases to a JSON file for backup, or import them to restore or sync across devices.
 
-- **Omnibox handler**: Listens for "b " prefix
-  - Provides suggestions as user types alias
-  - Navigates to bookmark when alias is selected/entered
-- **Context menu**: Creates right-click option on bookmarks
-  - "Set alias for this bookmark" option
-  - Opens dialog to set/update alias
-- **Storage management**: 
-  - Stores alias-to-bookmark mapping: `{ alias: bookmarkId }`
-  - Handles alias conflicts (warns or overwrites)
+### Automatic Cleanup
+When you delete a bookmark, any aliases assigned to it are automatically removed.
 
-### 3. popup/popup.html & popup.js
+## How to Use
 
-- Quick interface for managing aliases
-- List all bookmarks with their aliases
-- Set/update/remove alias for any bookmark
-- Search/filter bookmarks
-- Open bookmark directly
+### Setting an Alias
 
-### 4. options/options.html & options.js
+**Via Popup:**
+1. Click the extension icon
+2. Find the bookmark you want to alias
+3. Click "Set Alias" (or "Edit" if it already has one)
+4. Enter your alias
+5. Click "Save"
 
-- Full-featured options page
-- Same functionality as popup but more space
-- Bulk alias management
-- Import/export alias mappings
-- Settings (prefix customization, case sensitivity, etc.)
+**Via Options Page:**
+1. Right-click the extension icon → Options
+2. Use the search bar to find your bookmark
+3. Click "Set Alias" or "Edit"
+4. Enter your alias and save
 
-### 5. Storage Schema
+**Via Context Menu:**
+1. Right-click any link on a webpage
+2. Select "Set alias for this link"
+3. If the link isn't bookmarked, you'll be prompted to bookmark it first
+4. Enter your alias
 
-```javascript
-{
-  aliases: {
-    "alias1": "bookmarkId1",
-    "alias2": "bookmarkId2"
-  },
-  settings: {
-    prefix: "b",
-    caseSensitive: false
-  }
-}
-```
+### Opening a Bookmark
 
-## Key Chrome APIs Used
+1. Click in your browser's address bar (or press `Ctrl+L` / `Cmd+L`)
+2. Type `b` followed by a space
+3. Type your alias (or start typing to see suggestions)
+4. Press Enter to open in the current tab, or:
+   - `Alt+Enter` to open in a new tab
+   - `Ctrl+Enter` / `Cmd+Enter` to open in a new background tab
 
-- `chrome.omnibox` - Handle omnibox input and suggestions
-- `chrome.bookmarks` - Read bookmarks and open them
-- `chrome.storage` - Persist alias mappings
-- `chrome.contextMenus` - Right-click menu on bookmarks
-- `chrome.tabs` - Open bookmarks in tabs
+### Alias Rules
 
-## User Flow
+- Aliases can contain letters, numbers, underscores, and hyphens
+- Aliases are case-insensitive by default (configurable in settings)
+- Each bookmark can have one alias
+- Each alias can only be assigned to one bookmark
 
-1. **Setting an alias**:
+## Interface
 
-   - Via popup: Click extension icon → select bookmark → set alias
-   - Via context menu: Right-click bookmark → "Set alias" → enter alias
-   - Via options: Open options page → manage aliases
+### Popup
+A compact interface that shows all your bookmarks with their aliases. You can search, set aliases, and open bookmarks directly from here.
 
-2. **Using an alias**:
+### Options Page
+A full management interface where you can:
+- View all bookmarks in a list
+- Search and filter bookmarks
+- Set, edit, or remove aliases
+- Export your aliases to a JSON file
+- Import aliases from a backup
+- Configure extension settings
 
-   - Type "b " in omnibox
-   - Type alias (suggestions appear)
-   - Select or press Enter to open bookmark
+## Privacy
 
-## Technical Considerations
+All data is stored locally in your browser. Your bookmarks and aliases never leave your device—no external servers, no tracking, no data collection.
 
-- **Alias validation**: Prevent empty/invalid aliases, handle special characters
-- **Conflict resolution**: If alias already exists, prompt to overwrite or choose different alias
-- **Case sensitivity**: Configurable (default: case-insensitive)
-- **Bookmark deletion**: Clean up aliases when bookmarks are deleted
-- **Performance**: Efficient storage lookup for omnibox suggestions
-- **Error handling**: Graceful handling of deleted bookmarks, invalid IDs
+## Technical Details
 
-## Implementation Steps
+**Browser Support:** Chrome, Edge, and other Chromium-based browsers
 
-1. Create `manifest.json` with required permissions and structure
-2. Implement `background.js` with omnibox handler and context menu
-3. Build popup UI and functionality
-4. Build options page UI and functionality
-5. Implement storage utilities for alias management
-6. Add bookmark change listeners to sync aliases
-7. Test all three alias management methods
-8. Add error handling and edge cases
+**Permissions Required:**
+- `bookmarks`: To read and access your bookmarks
+- `storage`: To save your aliases locally
+- `contextMenus`: To add the right-click menu option
+- `tabs`: To open bookmarks in new tabs
