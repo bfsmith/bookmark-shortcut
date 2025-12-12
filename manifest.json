@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Shortcut",
+  "version": "1.0.0",
+  "description": "Open bookmarks via custom aliases in the omnibox",
+  "permissions": [
+    "bookmarks",
+    "storage",
+    "contextMenus",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "omnibox": {
+    "keyword": "b"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
+

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Shortcut</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bookmark Aliases</h1>
+      <button id="openOptions" class="btn-secondary" title="Open options page">⚙️</button>
+    </header>
+    
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search bookmarks..." autocomplete="off">
+    </div>
+
+    <div class="bookmarks-container" id="bookmarksList">
+      <div class="loading">Loading bookmarks...</div>
+    </div>
+
+    <div class="footer">
+      <small>Type "b " in the address bar to use aliases</small>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
+

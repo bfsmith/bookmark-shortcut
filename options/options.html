@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Shortcut - Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bookmark Shortcut Options</h1>
+    </header>
+
+    <div class="content">
+      <section class="section">
+        <h2>Manage Aliases</h2>
+        <div class="controls">
+          <input type="text" id="searchInput" placeholder="Search bookmarks or aliases..." autocomplete="off" class="search-box">
+          <button id="exportBtn" class="btn-secondary">Export Aliases</button>
+          <button id="importBtn" class="btn-secondary">Import Aliases</button>
+          <input type="file" id="importFile" accept=".json" style="display: none;">
+        </div>
+        <div class="bookmarks-container" id="bookmarksList">
+          <div class="loading">Loading bookmarks...</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Settings</h2>
+        <div class="settings">
+          <div class="setting-item">
+            <label for="prefixInput">Omnibox Prefix:</label>
+            <input type="text" id="prefixInput" maxlength="10" class="setting-input">
+            <small>Current prefix: <code id="currentPrefix">b</code></small>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="caseSensitiveCheck">
+              Case-sensitive aliases
+            </label>
+          </div>
+          <button id="saveSettings" class="btn-primary">Save Settings</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
+
