@@ -1,46 +1,13 @@
-// Storage utilities (same as background.js)
-const Storage = {
-  async getAliases() {
-    const result = await chrome.storage.local.get('aliases');
-    return result.aliases || {};
-  },
+// Storage utilities
+import { createBookmarkStorage } from '../storage';
 
-  async setAlias(alias, bookmarkId) {
-    const aliases = await this.getAliases();
-    aliases[alias.toLowerCase()] = bookmarkId;
-    await chrome.storage.local.set({ aliases });
-    return aliases;
-  },
-
-  async removeAlias(alias) {
-    const aliases = await this.getAliases();
-    delete aliases[alias.toLowerCase()];
-    await chrome.storage.local.set({ aliases });
-    return aliases;
-  },
-
-  async getAlias(alias) {
-    const aliases = await this.getAliases();
-    return aliases[alias.toLowerCase()] || null;
-  },
-
-  async getAllAliasesForBookmark(bookmarkId) {
-    const aliases = await this.getAliases();
-    const result = [];
-    for (const [alias, id] of Object.entries(aliases)) {
-      if (id === bookmarkId) {
-        result.push(alias);
-      }
-    }
-    return result;
-  }
-};
+const BookmarkStorage = createBookmarkStorage();
 
 // Flatten bookmark tree
-function flattenBookmarks(bookmarkTree) {
-  const bookmarks = [];
+function flattenBookmarks(bookmarkTree: BookmarkNode[]): BookmarkNode[] {
+  const bookmarks: BookmarkNode[] = [];
   
-  function traverse(nodes) {
+  function traverse(nodes: BookmarkNode[]): void {
     for (const node of nodes) {
       if (node.url) {
         bookmarks.push(node);
@@ -56,19 +23,21 @@ function flattenBookmarks(bookmarkTree) {
 }
 
 // Render bookmarks
-async function renderBookmarks(searchTerm = '') {
+async function renderBookmarks(searchTerm: string = ''): Promise<void> {
   const container = document.getElementById('bookmarksList');
+  if (!container) return;
+  
   const searchLower = searchTerm.toLowerCase();
   
   try {
     const bookmarkTree = await chrome.bookmarks.getTree();
     const allBookmarks = flattenBookmarks(bookmarkTree);
-    const aliases = await Storage.getAliases();
+    const aliases = await BookmarkStorage.getAliases();
     
     // Create reverse mapping: bookmarkId -> alias
-    const bookmarkToAlias = {};
+    const bookmarkToAlias: { [bookmarkId: string]: string } = {};
     for (const [alias, bookmarkId] of Object.entries(aliases)) {
-      bookmarkToAlias[bookmarkId] = alias;
+      bookmarkToAlias[bookmarkId as string] = alias;
     }
     
     // Filter bookmarks
@@ -107,10 +76,10 @@ async function renderBookmarks(searchTerm = '') {
     
     container.innerHTML = filtered.map(bookmark => {
       const alias = bookmarkToAlias[bookmark.id] || '';
-      const aliasDisplay = alias ? `<span class="bookmark-alias">${alias}</span>` : '';
+      const aliasDisplay = alias ? `<span class="bookmark-alias">${escapeHtml(alias)}</span>` : '';
       
       return `
-        <div class="bookmark-item" data-id="${bookmark.id}">
+        <div class="bookmark-item" data-id="${escapeHtml(bookmark.id)}">
           <div class="bookmark-info">
             <div class="bookmark-title">${escapeHtml(bookmark.title || 'Untitled')}</div>
             <div class="bookmark-url">${escapeHtml(bookmark.url || '')}</div>
@@ -141,28 +110,32 @@ async function renderBookmarks(searchTerm = '') {
   }
 }
 
-function escapeHtml(text) {
+function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
-function attachEventListeners() {
+function attachEventListeners(): void {
   // Edit alias buttons
   document.querySelectorAll('.edit-alias').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const item = btn.closest('.bookmark-item');
-      const inputContainer = item.querySelector('.alias-input-container');
+      const item = btn.closest('.bookmark-item') as HTMLElement;
+      if (!item) return;
+      const inputContainer = item.querySelector('.alias-input-container') as HTMLElement;
+      if (!inputContainer) return;
       const isVisible = inputContainer.style.display !== 'none';
       
       if (isVisible) {
         inputContainer.style.display = 'none';
       } else {
         inputContainer.style.display = 'flex';
-        const input = item.querySelector('.alias-input');
-        input.focus();
-        input.select();
+        const input = item.querySelector('.alias-input') as HTMLInputElement;
+        if (input) {
+          input.focus();
+          input.select();
+        }
       }
     });
   });
@@ -171,18 +144,22 @@ function attachEventListeners() {
   document.querySelectorAll('.save-alias').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const item = btn.closest('.bookmark-item');
+      const item = btn.closest('.bookmark-item') as HTMLElement;
+      if (!item) return;
       const bookmarkId = item.dataset.id;
-      const input = item.querySelector('.alias-input');
+      if (!bookmarkId) return;
+      const input = item.querySelector('.alias-input') as HTMLInputElement;
+      if (!input) return;
       const alias = input.value.trim().toLowerCase();
       
       if (alias === '') {
         // Remove alias
-        const currentAliases = await Storage.getAllAliasesForBookmark(bookmarkId);
+        const currentAliases = await BookmarkStorage.getAllAliasesForBookmark(bookmarkId);
         for (const currentAlias of currentAliases) {
-          await Storage.removeAlias(currentAlias);
+          await BookmarkStorage.removeAlias(currentAlias);
         }
-        renderBookmarks(document.getElementById('searchInput').value);
+        const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+        renderBookmarks(searchInput?.value || '');
         return;
       }
       
@@ -193,7 +170,7 @@ function attachEventListeners() {
       }
       
       // Check for conflicts
-      const existingBookmarkId = await Storage.getAlias(alias);
+      const existingBookmarkId = await BookmarkStorage.getAlias(alias);
       if (existingBookmarkId && existingBookmarkId !== bookmarkId) {
         const overwrite = confirm(
           `Alias "${alias}" is already assigned to another bookmark. Overwrite?`
@@ -203,8 +180,9 @@ function attachEventListeners() {
         }
       }
       
-      await Storage.setAlias(alias, bookmarkId);
-      renderBookmarks(document.getElementById('searchInput').value);
+      await BookmarkStorage.setAlias(alias, bookmarkId);
+      const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+      renderBookmarks(searchInput?.value || '');
     });
   });
   
@@ -212,15 +190,21 @@ function attachEventListeners() {
   document.querySelectorAll('.cancel-alias').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const item = btn.closest('.bookmark-item');
-      const inputContainer = item.querySelector('.alias-input-container');
+      const item = btn.closest('.bookmark-item') as HTMLElement;
+      if (!item) return;
+      const inputContainer = item.querySelector('.alias-input-container') as HTMLElement;
+      if (!inputContainer) return;
       inputContainer.style.display = 'none';
       // Reset input value
       const bookmarkId = item.dataset.id;
-      Storage.getAllAliasesForBookmark(bookmarkId).then(aliases => {
-        const input = item.querySelector('.alias-input');
-        input.value = aliases[0] || '';
-      });
+      if (bookmarkId) {
+        BookmarkStorage.getAllAliasesForBookmark(bookmarkId).then((aliases: string[]) => {
+          const input = item.querySelector('.alias-input') as HTMLInputElement;
+          if (input) {
+            input.value = aliases[0] || '';
+          }
+        });
+      }
     });
   });
   
@@ -228,11 +212,12 @@ function attachEventListeners() {
   document.querySelectorAll('.bookmark-item').forEach(item => {
     item.addEventListener('click', async (e) => {
       // Don't open if clicking on buttons or inputs
-      if (e.target.closest('button') || e.target.closest('input')) {
+      if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) {
         return;
       }
       
-      const bookmarkId = item.dataset.id;
+      const bookmarkId = (item as HTMLElement).dataset.id;
+      if (!bookmarkId) return;
       try {
         const bookmark = await chrome.bookmarks.get(bookmarkId);
         if (bookmark && bookmark[0] && bookmark[0].url) {
@@ -246,14 +231,21 @@ function attachEventListeners() {
 }
 
 // Search functionality
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  renderBookmarks(e.target.value);
-});
+const popupSearchInput = document.getElementById('searchInput');
+if (popupSearchInput) {
+  popupSearchInput.addEventListener('input', (e) => {
+    const target = e.target as HTMLInputElement;
+    renderBookmarks(target.value);
+  });
+}
 
 // Open options page
-document.getElementById('openOptions').addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
-});
+const openOptions = document.getElementById('openOptions');
+if (openOptions) {
+  openOptions.addEventListener('click', () => {
+    chrome.runtime.openOptionsPage();
+  });
+}
 
 // Initial render
 renderBookmarks();
@@ -261,7 +253,8 @@ renderBookmarks();
 // Listen for storage changes to update UI
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'local' && changes.aliases) {
-    renderBookmarks(document.getElementById('searchInput').value);
+    const popupSearchInput = document.getElementById('searchInput') as HTMLInputElement;
+    renderBookmarks(popupSearchInput?.value || '');
   }
 });
 

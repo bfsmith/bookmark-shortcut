@@ -1,65 +1,17 @@
 // Storage utilities
-const Storage = {
-  async getAliases() {
-    const result = await chrome.storage.local.get('aliases');
-    return result.aliases || {};
-  },
+import { createBookmarkStorage } from './storage';
 
-  async setAlias(alias, bookmarkId) {
-    const aliases = await this.getAliases();
-    aliases[alias.toLowerCase()] = bookmarkId;
-    await chrome.storage.local.set({ aliases });
-    return aliases;
-  },
-
-  async removeAlias(alias) {
-    const aliases = await this.getAliases();
-    delete aliases[alias.toLowerCase()];
-    await chrome.storage.local.set({ aliases });
-    return aliases;
-  },
-
-  async getAlias(alias) {
-    const aliases = await this.getAliases();
-    return aliases[alias.toLowerCase()] || null;
-  },
-
-  async getBookmarkIdByAlias(alias) {
-    return await this.getAlias(alias);
-  },
-
-  async getAllAliasesForBookmark(bookmarkId) {
-    const aliases = await this.getAliases();
-    const result = [];
-    for (const [alias, id] of Object.entries(aliases)) {
-      if (id === bookmarkId) {
-        result.push(alias);
-      }
-    }
-    return result;
-  },
-
-  async removeAliasesForBookmark(bookmarkId) {
-    const aliases = await this.getAliases();
-    const updated = {};
-    for (const [alias, id] of Object.entries(aliases)) {
-      if (id !== bookmarkId) {
-        updated[alias] = id;
-      }
-    }
-    await chrome.storage.local.set({ aliases: updated });
-  }
-};
+const BookmarkStorage = createBookmarkStorage();
 
 // Omnibox handler
-chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
+chrome.omnibox.onInputChanged.addListener(async (text: string, suggest: (suggestResults: chrome.omnibox.SuggestResult[]) => void) => {
   if (!text) {
     suggest([]);
     return;
   }
 
-  const aliases = await Storage.getAliases();
-  const matches = [];
+  const aliases = await BookmarkStorage.getAliases();
+  const matches: chrome.omnibox.SuggestResult[] = [];
   const searchText = text.toLowerCase();
 
   for (const [alias, bookmarkId] of Object.entries(aliases)) {
@@ -67,9 +19,10 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
       try {
         const bookmark = await chrome.bookmarks.get(bookmarkId);
         if (bookmark && bookmark[0]) {
+          const bookmarkNode = bookmark[0];
           matches.push({
             content: bookmarkId,
-            description: `${alias} - ${bookmark[0].title || bookmark[0].url}`
+            description: `${alias} - ${bookmarkNode.title || bookmarkNode.url || ''}`
           });
         }
       } catch (error) {
@@ -89,15 +42,15 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
   suggest(matches.slice(0, 10));
 });
 
-chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
-  let bookmarkId = null;
+chrome.omnibox.onInputEntered.addListener(async (text: string, disposition: chrome.omnibox.OnInputEnteredDisposition) => {
+  let bookmarkId: string | null = null;
 
   // Check if text is a direct alias match
-  bookmarkId = await Storage.getBookmarkIdByAlias(text);
+  bookmarkId = await BookmarkStorage.getBookmarkIdByAlias(text);
 
   // If not found, try to find by partial match
   if (!bookmarkId) {
-    const aliases = await Storage.getAliases();
+    const aliases = await BookmarkStorage.getAliases();
     const searchText = text.toLowerCase();
     for (const [alias, id] of Object.entries(aliases)) {
       if (alias === searchText || alias.startsWith(searchText)) {
@@ -141,7 +94,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => {
   if (info.menuItemId === 'set-bookmark-alias') {
     const linkUrl = info.linkUrl;
     
@@ -150,7 +103,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     }
 
     // Find bookmark by URL
-    let bookmarkId = null;
+    let bookmarkId: string | null = null;
     try {
       const bookmarks = await chrome.bookmarks.search({ url: linkUrl });
       if (bookmarks && bookmarks.length > 0) {
@@ -164,7 +117,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         if (createBookmark) {
           const bookmark = await chrome.bookmarks.create({
             url: linkUrl,
-            title: info.linkText || new URL(linkUrl).hostname
+            title: (info as any).linkText || new URL(linkUrl).hostname
           });
           bookmarkId = bookmark.id;
         } else {
@@ -179,7 +132,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     
     if (bookmarkId) {
       // Get current alias if any
-      const aliases = await Storage.getAliases();
+      const aliases = await BookmarkStorage.getAliases();
       let currentAlias = '';
       for (const [alias, id] of Object.entries(aliases)) {
         if (id === bookmarkId) {
@@ -205,9 +158,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
       if (trimmedAlias === '') {
         // Remove alias
-        if (currentAlias) {
-          await Storage.removeAlias(currentAlias);
-        }
+      if (currentAlias) {
+        await BookmarkStorage.removeAlias(currentAlias);
+      }
       } else {
         // Validate alias
         if (!/^[a-zA-Z0-9_-]+$/.test(trimmedAlias)) {
@@ -216,7 +169,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         }
 
         // Check for conflicts
-        const existingBookmarkId = await Storage.getAlias(trimmedAlias);
+        const existingBookmarkId = await BookmarkStorage.getAlias(trimmedAlias);
         if (existingBookmarkId && existingBookmarkId !== bookmarkId) {
           const overwrite = confirm(
             `Alias "${trimmedAlias}" is already assigned to another bookmark. Overwrite?`
@@ -226,20 +179,20 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           }
         }
 
-        await Storage.setAlias(trimmedAlias, bookmarkId);
+        await BookmarkStorage.setAlias(trimmedAlias, bookmarkId);
       }
     }
   }
 });
 
 // Clean up aliases when bookmarks are deleted
-chrome.bookmarks.onRemoved.addListener(async (id, removeInfo) => {
-  await Storage.removeAliasesForBookmark(id);
+chrome.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
+  await BookmarkStorage.removeAliasesForBookmark(id);
   
   // Also clean up children if folder was removed
   if (removeInfo.node && removeInfo.node.children) {
     for (const child of removeInfo.node.children) {
-      await Storage.removeAliasesForBookmark(child.id);
+      await BookmarkStorage.removeAliasesForBookmark(child.id);
     }
   }
 });
