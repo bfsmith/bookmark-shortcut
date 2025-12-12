@@ -6,41 +6,41 @@
   <title>Bookmark Shortcut - Options</title>
   <link rel="stylesheet" href="options.css">
 </head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Bookmark Shortcut Options</h1>
+<body class="font-sans text-sm text-gray-800 bg-gray-100 leading-relaxed">
+  <div class="max-w-[1200px] mx-auto bg-white min-h-screen">
+    <header class="py-6 px-8 border-b border-gray-200 bg-white">
+      <h1 class="text-2xl font-semibold text-gray-900">Bookmark Shortcut Options</h1>
     </header>
 
-    <div class="content">
-      <section class="section">
-        <h2>Manage Aliases</h2>
-        <div class="controls">
-          <input type="text" id="searchInput" placeholder="Search bookmarks or aliases..." autocomplete="off" class="search-box">
-          <button id="exportBtn" class="btn-secondary">Export Aliases</button>
-          <button id="importBtn" class="btn-secondary">Import Aliases</button>
+    <div class="p-8">
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 text-gray-900">Manage Aliases</h2>
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <input type="text" id="searchInput" placeholder="Search bookmarks or aliases..." autocomplete="off" class="flex-1 min-w-[200px] px-3.5 py-2.5 border border-gray-300 rounded text-sm outline-none transition-colors focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(66,133,244,0.1)]">
+          <button id="exportBtn" class="px-4 py-2.5 border border-gray-300 rounded bg-white cursor-pointer text-sm transition-all whitespace-nowrap hover:bg-gray-100 hover:border-gray-400">Export Aliases</button>
+          <button id="importBtn" class="px-4 py-2.5 border border-gray-300 rounded bg-white cursor-pointer text-sm transition-all whitespace-nowrap hover:bg-gray-100 hover:border-gray-400">Import Aliases</button>
           <input type="file" id="importFile" accept=".json" style="display: none;">
         </div>
-        <div class="bookmarks-container" id="bookmarksList">
-          <div class="loading">Loading bookmarks...</div>
+        <div class="border border-gray-200 rounded max-h-[600px] overflow-y-auto bg-white" id="bookmarksList">
+          <div class="py-10 px-10 text-center text-gray-600">Loading bookmarks...</div>
         </div>
       </section>
 
-      <section class="section">
-        <h2>Settings</h2>
-        <div class="settings">
-          <div class="setting-item">
-            <label for="prefixInput">Omnibox Prefix:</label>
-            <input type="text" id="prefixInput" maxlength="10" class="setting-input">
-            <small>Current prefix: <code id="currentPrefix">b</code></small>
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold mb-4 text-gray-900">Settings</h2>
+        <div class="bg-gray-50 p-5 rounded border border-gray-200">
+          <div class="mb-5">
+            <label for="prefixInput" class="block mb-2 font-medium text-gray-900">Omnibox Prefix:</label>
+            <input type="text" id="prefixInput" maxlength="10" class="w-full max-w-[200px] px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(66,133,244,0.1)]">
+            <small class="block mt-1 text-gray-600 text-xs">Current prefix: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono text-xs" id="currentPrefix">b</code></small>
           </div>
-          <div class="setting-item">
-            <label>
-              <input type="checkbox" id="caseSensitiveCheck">
+          <div class="mb-5">
+            <label class="block mb-2 font-medium text-gray-900">
+              <input type="checkbox" id="caseSensitiveCheck" class="mr-2 w-[18px] h-[18px] cursor-pointer">
               Case-sensitive aliases
             </label>
           </div>
-          <button id="saveSettings" class="btn-primary">Save Settings</button>
+          <button id="saveSettings" class="px-5 py-2.5 border-0 rounded bg-blue-500 text-white cursor-pointer text-sm font-medium transition-colors hover:bg-blue-600 mt-2">Save Settings</button>
         </div>
       </section>
     </div>
@@ -48,4 +48,3 @@
   <script type="module" src="options.js"></script>
 </body>
 </html>
-

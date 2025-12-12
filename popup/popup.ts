@@ -67,8 +67,8 @@ async function renderBookmarks(searchTerm: string = ''): Promise<void> {
     
     if (filtered.length === 0) {
       container.innerHTML = `
-        <div class="empty-state">
-          <p>No bookmarks found</p>
+        <div class="py-10 px-5 text-center text-gray-600">
+          <p class="mt-2 text-sm">No bookmarks found</p>
         </div>
       `;
       return;
@@ -76,21 +76,21 @@ async function renderBookmarks(searchTerm: string = ''): Promise<void> {
     
     container.innerHTML = filtered.map(bookmark => {
       const alias = bookmarkToAlias[bookmark.id] || '';
-      const aliasDisplay = alias ? `<span class="bookmark-alias">${escapeHtml(alias)}</span>` : '';
+      const aliasDisplay = alias ? `<span class="inline-block bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-xs font-medium mt-1">${escapeHtml(alias)}</span>` : '';
       
       return `
-        <div class="bookmark-item" data-id="${escapeHtml(bookmark.id)}">
-          <div class="bookmark-info">
-            <div class="bookmark-title">${escapeHtml(bookmark.title || 'Untitled')}</div>
-            <div class="bookmark-url">${escapeHtml(bookmark.url || '')}</div>
+        <div class="flex items-start p-2.5 rounded mb-1 transition-colors cursor-pointer hover:bg-gray-100" data-id="${escapeHtml(bookmark.id)}">
+          <div class="flex-1 min-w-0 mr-2">
+            <div class="font-medium text-gray-900 mb-0.5 truncate">${escapeHtml(bookmark.title || 'Untitled')}</div>
+            <div class="text-xs text-gray-600 truncate">${escapeHtml(bookmark.url || '')}</div>
             ${aliasDisplay}
-            <div class="alias-input-container" style="display: none;">
-              <input type="text" class="alias-input" placeholder="Enter alias" value="${escapeHtml(alias)}" maxlength="50">
-              <button class="btn-small btn-primary save-alias">Save</button>
-              <button class="btn-small cancel-alias">Cancel</button>
+            <div class="flex gap-1 mt-1.5" style="display: none;">
+              <input type="text" class="flex-1 px-2 py-1 border border-gray-300 rounded text-xs outline-none focus:border-blue-500" placeholder="Enter alias" value="${escapeHtml(alias)}" maxlength="50">
+              <button class="px-2 py-1 border-0 rounded bg-blue-500 text-white cursor-pointer text-xs transition-all hover:bg-blue-600 save-alias">Save</button>
+              <button class="px-2 py-1 border border-gray-300 rounded bg-white cursor-pointer text-xs transition-all hover:bg-gray-100 cancel-alias">Cancel</button>
             </div>
           </div>
-          <button class="btn-small ${alias ? 'btn-danger' : 'btn-primary'} edit-alias" title="${alias ? 'Edit/Remove alias' : 'Set alias'}">
+          <button class="px-2 py-1 rounded cursor-pointer text-xs transition-all self-start mt-0 ${alias ? 'bg-red-500 text-white border-0 hover:bg-red-600' : 'bg-blue-500 text-white border-0 hover:bg-blue-600'} edit-alias" title="${alias ? 'Edit/Remove alias' : 'Set alias'}">
             ${alias ? '✏️' : '➕'}
           </button>
         </div>
@@ -103,8 +103,8 @@ async function renderBookmarks(searchTerm: string = ''): Promise<void> {
   } catch (error) {
     console.error('Error loading bookmarks:', error);
     container.innerHTML = `
-      <div class="empty-state">
-        <p>Error loading bookmarks</p>
+      <div class="py-10 px-5 text-center text-gray-600">
+        <p class="mt-2 text-sm">Error loading bookmarks</p>
       </div>
     `;
   }
@@ -121,9 +121,9 @@ function attachEventListeners(): void {
   document.querySelectorAll('.edit-alias').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const item = btn.closest('.bookmark-item') as HTMLElement;
+      const item = btn.closest('[data-id]') as HTMLElement;
       if (!item) return;
-      const inputContainer = item.querySelector('.alias-input-container') as HTMLElement;
+      const inputContainer = item.querySelector('div[style*="display"]') as HTMLElement;
       if (!inputContainer) return;
       const isVisible = inputContainer.style.display !== 'none';
       
@@ -131,7 +131,7 @@ function attachEventListeners(): void {
         inputContainer.style.display = 'none';
       } else {
         inputContainer.style.display = 'flex';
-        const input = item.querySelector('.alias-input') as HTMLInputElement;
+        const input = item.querySelector('input[type="text"]') as HTMLInputElement;
         if (input) {
           input.focus();
           input.select();
@@ -144,11 +144,11 @@ function attachEventListeners(): void {
   document.querySelectorAll('.save-alias').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const item = btn.closest('.bookmark-item') as HTMLElement;
+      const item = btn.closest('[data-id]') as HTMLElement;
       if (!item) return;
-      const bookmarkId = item.dataset.id;
+      const bookmarkId = item.getAttribute('data-id');
       if (!bookmarkId) return;
-      const input = item.querySelector('.alias-input') as HTMLInputElement;
+      const input = item.querySelector('input[type="text"]') as HTMLInputElement;
       if (!input) return;
       const alias = input.value.trim().toLowerCase();
       
@@ -190,16 +190,16 @@ function attachEventListeners(): void {
   document.querySelectorAll('.cancel-alias').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const item = btn.closest('.bookmark-item') as HTMLElement;
+      const item = btn.closest('[data-id]') as HTMLElement;
       if (!item) return;
-      const inputContainer = item.querySelector('.alias-input-container') as HTMLElement;
+      const inputContainer = item.querySelector('div[style*="display"]') as HTMLElement;
       if (!inputContainer) return;
       inputContainer.style.display = 'none';
       // Reset input value
-      const bookmarkId = item.dataset.id;
+      const bookmarkId = item.getAttribute('data-id');
       if (bookmarkId) {
         BookmarkStorage.getAllAliasesForBookmark(bookmarkId).then((aliases: string[]) => {
-          const input = item.querySelector('.alias-input') as HTMLInputElement;
+          const input = item.querySelector('input[type="text"]') as HTMLInputElement;
           if (input) {
             input.value = aliases[0] || '';
           }
@@ -209,14 +209,14 @@ function attachEventListeners(): void {
   });
   
   // Open bookmark on click
-  document.querySelectorAll('.bookmark-item').forEach(item => {
+  document.querySelectorAll('[data-id]').forEach(item => {
     item.addEventListener('click', async (e) => {
       // Don't open if clicking on buttons or inputs
       if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) {
         return;
       }
       
-      const bookmarkId = (item as HTMLElement).dataset.id;
+      const bookmarkId = (item as HTMLElement).getAttribute('data-id');
       if (!bookmarkId) return;
       try {
         const bookmark = await chrome.bookmarks.get(bookmarkId);
