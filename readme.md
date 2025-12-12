@@ -1,5 +1,10 @@
 # Bookmark Shortcut
 
+<p align="center">
+  <img src="icons/icon128.png" alt="Bookmark Shortcut Logo" width="128" height="128" />
+</p>
+
+
 A browser extension that lets you create custom aliases for your bookmarks and open them from the address bar.
 
 Instead of navigating through bookmark folders or typing full URLs, you can assign short aliases to your bookmarks and access them by typing `b` followed by your alias in the browser's address bar.
