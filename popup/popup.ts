@@ -1,5 +1,5 @@
 // Storage utilities
-import { createBookmarkStorage } from '../storage';
+import { createBookmarkStorage } from '../storage.js';
 
 const BookmarkStorage = createBookmarkStorage();
 
