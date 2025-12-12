@@ -7,7 +7,7 @@ Instead of navigating through bookmark folders or typing full URLs, you can assi
 ## Quick Start
 
 1. Install the extension
-2. Set an alias for any bookmark (via popup, options page, or right-click menu)
+2. Set an alias for any bookmark (via popup or options page)
 3. Type `b` + space + your alias in the address bar
 4. Press Enter to open the bookmark
 
@@ -24,10 +24,9 @@ The popup and options page include search that matches bookmarks by:
 - Domain name
 
 ### Alias Management
-You can set, edit, or remove aliases in three ways:
+You can set, edit, or remove aliases in two ways:
 - **Popup**: Click the extension icon for quick access
 - **Options Page**: Full management interface with all your bookmarks
-- **Context Menu**: Right-click any link on a webpage to set an alias
 
 ### Settings
 - **Custom Prefix**: Change the omnibox keyword from `b` to something else
@@ -55,12 +54,6 @@ When you delete a bookmark, any aliases assigned to it are automatically removed
 2. Use the search bar to find your bookmark
 3. Click "Set Alias" or "Edit"
 4. Enter your alias and save
-
-**Via Context Menu:**
-1. Right-click any link on a webpage
-2. Select "Set alias for this link"
-3. If the link isn't bookmarked, you'll be prompted to bookmark it first
-4. Enter your alias
 
 ### Opening a Bookmark
 
@@ -103,5 +96,4 @@ All data is stored locally in your browser. Your bookmarks and aliases never lea
 **Permissions Required:**
 - `bookmarks`: To read and access your bookmarks
 - `storage`: To save your aliases locally
-- `contextMenus`: To add the right-click menu option
 - `tabs`: To open bookmarks in new tabs
